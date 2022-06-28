@@ -71,10 +71,11 @@ function rotate!(stack::Data.Grid, tetro::Data.Tetromino)::Nothing
    end
 end
 
-function remove_lines!(stack::Data.Grid)
+function remove_lines!(stack::Data.Grid)::Nothing
    filter!(stack) do row
-      all(x -> x == 1, row)
+      !all(x -> x == 1, row)
    end
+   nothing
 end
 
 end
