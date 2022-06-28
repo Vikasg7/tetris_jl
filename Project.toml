@@ -1,0 +1,4 @@
+name = "tetris_jl"
+uuid = "10b6e044-476f-46f6-95fd-43da19691102"
+authors = ["Vikas <v33vikasgautam@gmail.com>"]
+version = "0.1.0"
