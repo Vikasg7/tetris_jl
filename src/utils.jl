@@ -45,4 +45,10 @@ end
 inc(x::Int)::Int = x + 1
 dec(x::Int)::Int = x - 1
 
+function blocking_subscribe!(subscribable, actor)
+   synced = sync(actor)
+   subscribe!(subscribable, synced)
+   wait(synced)
+end
+
 end

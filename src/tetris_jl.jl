@@ -15,14 +15,11 @@ function main()
       scan(Data.Tetris, Engine.update, Data.Tetris()) |>
       take_while(!Engine.game_over; is_inclusive=true)
 
-   ch = Channel(1)
-   subscribe!(tetris, lambda(
+   Utils.blocking_subscribe!(tetris, lambda(
       on_next     = tetris -> Engine.print_frame(tetris),
-      on_error    = err    -> put!(ch, err),
-      on_complete = ()     -> put!(ch, "Game Over!")
+      on_error    = err    -> showerror(stderr, err),
+      on_complete = ()     -> println("Game Over!")
    ))
-   result = fetch(ch)
-   println(result)
 end
 
 end

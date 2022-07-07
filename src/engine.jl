@@ -19,14 +19,14 @@ function stack_collision(stack::Data.Grid, tetro::Data.Tetromino)::Bool
       if tetro.shape.grid[r][c] == 1
          x = c + tetro.cordX - 1
          y = r + tetro.cordY - 1
-         (stack[y][x] == 1) && 
+         (stack[y][x] == 1) &&
             return true
       end
    end
    return false
 end
 
-stack_collision(tetris::Data.Tetris)::Bool = stack_collision(tetris.stack, tetris.tetro) 
+stack_collision(tetris::Data.Tetris)::Bool = stack_collision(tetris.stack, tetris.tetro)
 
 function can_rotate(tetris::Data.Tetris)::Bool
    rotated = rotate(tetris.tetro)
@@ -45,7 +45,7 @@ function rotate(shape::Data.Shape)::Data.Shape
 end
 
 function rotate(tetro::Data.Tetromino)::Data.Tetromino
-   over(tetro, :shape=>rotate)
+   over(tetro, :shape => rotate)
 end
 
 function move(tetro::Data.Tetromino, direction::Pair)::Data.Tetromino
@@ -69,12 +69,12 @@ function remove_lines!(stack::Data.Grid)::Data.Grid
    return stack
 end
 
-function fill(tetris::Data.Tetris)::Data.Grid
+function fill!(tetris::Data.Tetris)::Data.Grid
    for r = 1:tetris.tetro.shape.rows,
        c = 1:tetris.tetro.shape.cols
       dy = r + tetris.tetro.cordY - 1
       dx = c + tetris.tetro.cordX - 1
-      if tetris.stack[dy][dx] == 0 
+      if tetris.stack[dy][dx] == 0
          tetris.stack[dy][dx] = tetris.tetro.shape.grid[r][c]
       end
    end
@@ -86,11 +86,11 @@ function game_over(tetris::Data.Tetris)::Bool
 end
 
 function update(k::Char, tetris::Data.Tetris)
-   if (k == 's') 
+   if (k == 's')
       if can_move(tetris, :cordY => inc)
          return with(tetris, :tetro => move(tetris.tetro, :cordY => inc))
       else
-         stack = tetris |> fill |> remove_lines!
+         stack = tetris |> fill! |> remove_lines!
          tetro = Data.Tetromino()
          return Data.Tetris(stack, tetro)
       end
@@ -107,8 +107,8 @@ function update(k::Char, tetris::Data.Tetris)
    return tetris
 end
 
-const clear_terminal_cmd = 
-   "\033[$(Data.STACK_ROWS)A"*
+const clear_terminal_cmd =
+   "\033[$(Data.STACK_ROWS)A" *
    "\033[$(Data.STACK_COLS)D"
 
 function print_frame(tetris::Data.Tetris)
