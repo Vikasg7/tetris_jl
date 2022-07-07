@@ -32,42 +32,50 @@ struct Shape
    grid::Grid
    rows::Int
    cols::Int
-   function Shape(grid::Grid)
-      new(grid, length(grid), length(first(grid)))
-   end
-   function Shape(grid::Grid, rows::Int, cols::Int)
-      new(grid, rows, cols)
-   end
+   Shape(grid::Grid) = new(grid, length(grid), length(first(grid)))
+   Shape(grid::Grid, rows::Int, cols::Int) = new(grid, rows, cols)
 end
 
-mutable struct Tetromino
+struct Tetromino
    shape::Shape
    cordX::Int
    cordY::Int
-   function Tetromino()
-      new(Shape(rand(Tetrominos)), STACK_COLS/2-2, 1)
-   end
-   function Tetromino(other::Tetromino, shape::Shape)
-      new(shape, other.cordX, other.cordY)
-   end
+   Tetromino() = new(Shape(rand(Tetrominos)), 4, 1)
+   Tetromino(shape::Shape, cordX::Int, cordY::Int) = new(shape, cordX, cordY)
 end
 
-mutable struct Tetris
+struct Tetris
    stack::Grid
    tetro::Tetromino
    function Tetris()
-      grid = fill(zeros(Int, 10), 15)
+      grid = [zeros(Int, STACK_COLS) for _ in 1:STACK_ROWS]
       new(grid, Tetromino())
    end
+   Tetris(stack::Grid, tetro::Tetromino) = new(stack, tetro)
 end
 
 function Base.show(io::Core.IO, grid::Grid)
-   for r in grid
-      println(io, replace(join(r, " "), "1" => "#", "0" => " "))
+   rows = map(grid) do row
+      replace(join(row, " "), "1" => "#", "0" => "-")
    end
+   print(io, join(rows, "\n"))
 end
 
 Base.show(io::Core.IO, shape::Shape)     = show(io, shape.grid)
 Base.show(io::Core.IO, tetro::Tetromino) = show(io, tetro.shape.grid)
+
+function Base.show(io::Core.IO, tetris::Tetris)
+   stack::Grid = deepcopy(tetris.stack)
+   tetro = tetris.tetro
+   for r = 1:tetro.shape.rows,
+       c = 1:tetro.shape.cols
+      dy = r + tetro.cordY - 1
+      dx = c + tetro.cordX - 1
+      if stack[dy][dx] == 0
+         stack[dy][dx] = tetro.shape.grid[r][c]
+      end
+   end
+   show(io, stack)
+end
 
 end
