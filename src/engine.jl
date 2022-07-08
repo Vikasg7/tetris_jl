@@ -91,8 +91,7 @@ function update(k::Char, tetris::Data.Tetris)
          return with(tetris, :tetro => move(tetris.tetro, :cordY => inc))
       else
          stack = tetris |> fill! |> remove_lines!
-         tetro = Data.Tetromino()
-         return Data.Tetris(stack, tetro)
+         return Data.Tetris(stack, Data.Tetromino())
       end
    end
    if (k == 'w') & can_rotate(tetris)
