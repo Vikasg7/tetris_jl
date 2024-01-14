@@ -1,21 +1,14 @@
 module Utils
 
-export key_events, blocking_subscribe!, with, over, inc, dec
+import REPL
+import Dates
 
-using Rocket
-using REPL
-
-function key_events()
-   make(Char) do actor
-      t = REPL.TerminalMenus.terminal
-      REPL.Terminals.raw!(t, true)
-      while !actor.is_unsubscribed
-         c = Char(REPL.TerminalMenus.readkey(t.in_stream))
-         if Int(c) == 3
-            showerror(stderr, InterruptException())
-            exit(1)
-         end
-         next!(actor, c)
+function key_events()::Channel{Char}
+   t = REPL.TerminalMenus.terminal
+   REPL.Terminals.raw!(t, true)
+   Channel{Char}(1, spawn=true) do ch
+      while isopen(ch)
+         put!(ch, read(t, Char))
       end
    end
 end
@@ -44,11 +37,5 @@ end
 
 inc(x::Int)::Int = x + 1
 dec(x::Int)::Int = x - 1
-
-function blocking_subscribe!(subscribable, actor)
-   synced = sync(actor)
-   subscribe!(subscribable, synced)
-   wait(synced)
-end
 
 end

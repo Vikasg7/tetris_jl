@@ -1,7 +1,7 @@
 module Engine
 
-using ..Data
-using ..Utils
+import ..Data
+using  ..Utils: inc, dec, over, with
 
 function wall_collision(tetro::Data.Tetromino)::Bool
    # Left Wall
@@ -54,8 +54,10 @@ end
 
 function can_move(tetris::Data.Tetris, direction::Pair)::Bool
    moved = move(tetris.tetro, direction)
-   wall_collision(moved) && return false
-   stack_collision(tetris.stack, moved) && return false
+   wall_collision(moved) &&
+      return false
+   stack_collision(tetris.stack, moved) &&
+      return false
    return true
 end
 
@@ -81,11 +83,11 @@ function fill!(tetris::Data.Tetris)::Data.Grid
    return tetris.stack
 end
 
-function game_over(tetris::Data.Tetris)::Bool
+function is_game_over(tetris::Data.Tetris)::Bool
    stack_collision(tetris) & (tetris.tetro.cordY == 1)
 end
 
-function update(k::Char, tetris::Data.Tetris)
+function update(tetris::Data.Tetris, k::Char)
    if (k == 's')
       if can_move(tetris, :cordY => inc)
          return with(tetris, :tetro => move(tetris.tetro, :cordY => inc))

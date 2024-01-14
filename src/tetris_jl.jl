@@ -1,27 +1,44 @@
+#!/usr/bin/env julia
 module tetris_jl
 
-using Rocket
+import Dates
 
-include("./take_while.jl")
-include("./repeat_latest_on_interval.jl")
 include("./utils.jl")
 include("./data.jl")
 include("./engine.jl")
 
 function main()
-   ks = Utils.key_events() |> start_with('s') |> async() |> share()
-   ss = ks |> filter(∈(['s'])) |> repeat_latest_on_interval(1.5)
-   os = ks |> filter(∈(['w', 'a', 'd']))
-   tetris =
-      merged((ss, os)) |>
-      scan(Data.Tetris, Engine.update, Data.Tetris()) |>
-      take_while(!Engine.game_over; is_inclusive=true)
-
-   Utils.blocking_subscribe!(tetris, lambda(
-      on_next     = tetris -> Engine.print_frame(tetris),
-      on_error    = err    -> showerror(stderr, err),
-      on_complete = ()     -> println("Game Over!")
-   ))
+   descent_interval = Dates.Millisecond(1000)
+   update_interval = Dates.Millisecond(35)
+   tetris = Data.Tetris()
+   keys = Utils.key_events()
+   put!(keys, 's')
+   last_update = last_descent = Dates.now()
+   while !Engine.is_game_over(tetris)
+      if isready(keys)
+         key = take!(keys)
+         if key == 'q'
+            break
+         end
+         if key == 's'
+            last_descent = Dates.now()
+         end
+         tetris = Engine.update(tetris, key)
+      else
+         can_descend = (Dates.now() - last_descent) >= descent_interval
+         if can_descend
+            tetris = Engine.update(tetris, 's')
+            last_descent = Dates.now()
+         end
+      end
+      can_update = (Dates.now() - last_update) >= update_interval
+      if can_update
+         Engine.print_frame(tetris)
+         last_update = Dates.now()
+      end 
+   end
+   close(keys)
+   println("Game Over!")
 end
 
 end

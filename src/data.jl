@@ -28,7 +28,7 @@ const Tetrominos = [
     [1,1,1]]
 ]
 
-struct Shape
+mutable struct Shape
    grid::Grid
    rows::Int
    cols::Int
@@ -36,7 +36,7 @@ struct Shape
    Shape(grid::Grid, rows::Int, cols::Int) = new(grid, rows, cols)
 end
 
-struct Tetromino
+mutable struct Tetromino
    shape::Shape
    cordX::Int
    cordY::Int
@@ -44,7 +44,9 @@ struct Tetromino
    Tetromino(shape::Shape, cordX::Int, cordY::Int) = new(shape, cordX, cordY)
 end
 
-struct Tetris
+Base.copy(t::Tetromino) = Tetromino(t.shape, t.cordX, t.cordY)
+
+mutable struct Tetris
    stack::Grid
    tetro::Tetromino
    function Tetris()
