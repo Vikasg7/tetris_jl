@@ -23,11 +23,11 @@ function main()
          if key == 's'
             last_descent = Dates.now()
          end
-         tetris = Engine.update(tetris, key)
+         Engine.update!(tetris, key)
       else
          can_descend = (Dates.now() - last_descent) >= descent_interval
          if can_descend
-            tetris = Engine.update(tetris, 's')
+            Engine.update!(tetris, 's')
             last_descent = Dates.now()
          end
       end
@@ -37,6 +37,7 @@ function main()
          last_update = Dates.now()
       end 
    end
+   Engine.print_frame(tetris)
    close(keys)
    println("Game Over!")
 end

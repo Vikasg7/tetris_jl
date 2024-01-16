@@ -4,6 +4,8 @@ const STACK_COLS = 10
 const STACK_ROWS = 20
 
 const Grid = Vector{Vector{Int}}
+const Direction = Tuple{Int, Int}
+const Cords = Tuple{Int, Int}
 
 const Tetrominos = [
    # ____
@@ -32,28 +34,27 @@ mutable struct Shape
    grid::Grid
    rows::Int
    cols::Int
-   Shape(grid::Grid) = new(grid, length(grid), length(first(grid)))
-   Shape(grid::Grid, rows::Int, cols::Int) = new(grid, rows, cols)
 end
+
+Shape(grid::Grid) = Shape(grid, length(grid), length(first(grid)))
 
 mutable struct Tetromino
    shape::Shape
-   cordX::Int
-   cordY::Int
-   Tetromino() = new(Shape(rand(Tetrominos)), 4, 1)
-   Tetromino(shape::Shape, cordX::Int, cordY::Int) = new(shape, cordX, cordY)
+   cords::Tuple{Int, Int}
 end
 
-Base.copy(t::Tetromino) = Tetromino(t.shape, t.cordX, t.cordY)
+Tetromino() = Tetromino(Shape(rand(Tetrominos)), (4, 1))
+
+Base.copy(t::Tetromino) = Tetromino(t.shape, t.cords)
 
 mutable struct Tetris
    stack::Grid
    tetro::Tetromino
-   function Tetris()
-      grid = [zeros(Int, STACK_COLS) for _ in 1:STACK_ROWS]
-      new(grid, Tetromino())
-   end
-   Tetris(stack::Grid, tetro::Tetromino) = new(stack, tetro)
+end
+
+function Tetris()
+   grid = [zeros(Int, STACK_COLS) for _ in 1:STACK_ROWS]
+   Tetris(grid, Tetromino())
 end
 
 function Base.show(io::Core.IO, grid::Grid)
@@ -71,8 +72,8 @@ function Base.show(io::Core.IO, tetris::Tetris)
    tetro = tetris.tetro
    for r = 1:tetro.shape.rows,
        c = 1:tetro.shape.cols
-      dy = r + tetro.cordY - 1
-      dx = c + tetro.cordX - 1
+      dy = r + tetro.cords[2] - 1
+      dx = c + tetro.cords[1] - 1
       if stack[dy][dx] == 0
          stack[dy][dx] = tetro.shape.grid[r][c]
       end

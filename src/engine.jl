@@ -1,15 +1,17 @@
 module Engine
 
 import ..Data
-using  ..Utils: inc, dec, over, with
 
 function wall_collision(tetro::Data.Tetromino)::Bool
    # Left Wall
-   tetro.cordX < 1 && return true
+   tetro.cords[1] < 1 && 
+      return true
    # Right Wall
-   (tetro.cordX + tetro.shape.cols - 1) > Data.STACK_COLS && return true
+   (tetro.cords[1] + tetro.shape.cols - 1) > Data.STACK_COLS && 
+      return true
    # Bottom Wall
-   (tetro.cordY + tetro.shape.rows - 1) > Data.STACK_ROWS && return true
+   (tetro.cords[2] + tetro.shape.rows - 1) > Data.STACK_ROWS && 
+      return true
    return false
 end
 
@@ -17,8 +19,8 @@ function stack_collision(stack::Data.Grid, tetro::Data.Tetromino)::Bool
    for r = 1:tetro.shape.rows,
        c = 1:tetro.shape.cols
       if tetro.shape.grid[r][c] == 1
-         x = c + tetro.cordX - 1
-         y = r + tetro.cordY - 1
+         x = c + tetro.cords[1] - 1
+         y = r + tetro.cords[2] - 1
          (stack[y][x] == 1) &&
             return true
       end
@@ -27,13 +29,6 @@ function stack_collision(stack::Data.Grid, tetro::Data.Tetromino)::Bool
 end
 
 stack_collision(tetris::Data.Tetris)::Bool = stack_collision(tetris.stack, tetris.tetro)
-
-function can_rotate(tetris::Data.Tetris)::Bool
-   rotated = rotate(tetris.tetro)
-   wall_collision(rotated) && return false
-   stack_collision(tetris.stack, rotated) && return false
-   return true
-end
 
 function rotate(shape::Data.Shape)::Data.Shape
    grid::Data.Grid = [zeros(Int, shape.rows) for _ in 1:shape.cols]
@@ -44,16 +39,29 @@ function rotate(shape::Data.Shape)::Data.Shape
    return Data.Shape(grid, shape.cols, shape.rows)
 end
 
-function rotate(tetro::Data.Tetromino)::Data.Tetromino
-   over(tetro, :shape => rotate)
+function rotate!(tetro::Data.Tetromino)
+   tetro.shape = rotate(tetro.shape)
+   return nothing
 end
 
-function move(tetro::Data.Tetromino, direction::Pair)::Data.Tetromino
-   over(tetro, direction)
+function move!(tetro::Data.Tetromino, direction::Data.Direction)
+   tetro.cords = tetro.cords .+ direction
+   return nothing
 end
 
-function can_move(tetris::Data.Tetris, direction::Pair)::Bool
-   moved = move(tetris.tetro, direction)
+function can_rotate(tetris::Data.Tetris)::Bool
+   rotated = copy(tetris.tetro)
+   rotate!(rotated)
+   wall_collision(rotated) &&
+      return false
+   stack_collision(tetris.stack, rotated) &&
+      return false
+   return true
+end
+
+function can_move(tetris::Data.Tetris, direction::Data.Direction)::Bool
+   moved = copy(tetris.tetro)
+   move!(moved, direction)
    wall_collision(moved) &&
       return false
    stack_collision(tetris.stack, moved) &&
@@ -61,51 +69,49 @@ function can_move(tetris::Data.Tetris, direction::Pair)::Bool
    return true
 end
 
-function remove_lines!(stack::Data.Grid)::Data.Grid
+function remove_lines!(stack::Data.Grid)
    filter!(stack) do row
       !all(x -> x == 1, row)
    end
    for _ = 1:Data.STACK_ROWS-length(stack)
       pushfirst!(stack, zeros(Int, Data.STACK_COLS))
    end
-   return stack
 end
 
-function fill!(tetris::Data.Tetris)::Data.Grid
+function fill!(tetris::Data.Tetris)
    for r = 1:tetris.tetro.shape.rows,
        c = 1:tetris.tetro.shape.cols
-      dy = r + tetris.tetro.cordY - 1
-      dx = c + tetris.tetro.cordX - 1
+      dy = r + tetris.tetro.cords[2] - 1
+      dx = c + tetris.tetro.cords[1] - 1
       if tetris.stack[dy][dx] == 0
          tetris.stack[dy][dx] = tetris.tetro.shape.grid[r][c]
       end
    end
-   return tetris.stack
 end
 
 function is_game_over(tetris::Data.Tetris)::Bool
-   stack_collision(tetris) & (tetris.tetro.cordY == 1)
+   stack_collision(tetris) & (tetris.tetro.cords[2] == 1)
 end
 
-function update(tetris::Data.Tetris, k::Char)
+function update!(tetris::Data.Tetris, k::Char)
    if (k == 's')
-      if can_move(tetris, :cordY => inc)
-         return with(tetris, :tetro => move(tetris.tetro, :cordY => inc))
+      if can_move(tetris, (0,1))
+         move!(tetris.tetro, (0,1))
       else
-         stack = tetris |> fill! |> remove_lines!
-         return Data.Tetris(stack, Data.Tetromino())
+         fill!(tetris)
+         remove_lines!(tetris.stack)
+         tetris.tetro = Data.Tetromino()
       end
    end
    if (k == 'w') & can_rotate(tetris)
-      return with(tetris, :tetro => rotate(tetris.tetro))
+      rotate!(tetris.tetro)
    end
-   if (k == 'a') & can_move(tetris, :cordX => dec)
-      return with(tetris, :tetro => move(tetris.tetro, :cordX => dec))
+   if (k == 'a') & can_move(tetris, (-1,0))
+      move!(tetris.tetro, (-1,0))
    end
-   if (k == 'd') & can_move(tetris, :cordX => inc)
-      return with(tetris, :tetro => move(tetris.tetro, :cordX => inc))
+   if (k == 'd') & can_move(tetris, (1,0))
+      move!(tetris.tetro, (1,0))
    end
-   return tetris
 end
 
 const clear_terminal_cmd =
